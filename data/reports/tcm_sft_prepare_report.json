@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-06-07T15:11:18.141769+00:00",
+  "dataset_dir": "data/external/TCM-Dataset-SFT/train",
+  "max_rows": 1000,
+  "seed": 42,
+  "raw_rows": 3677727,
+  "valid_rows": 200574,
+  "kept_rows": 1000,
+  "filtered_rows": 3477153,
+  "filtered_counts": {
+    "non_tcm_topic": 2352339,
+    "short_output": 145190,
+    "unsafe_clinical_plan": 414799,
+    "input_equals_output": 104,
+    "empty_output": 10,
+    "long_output": 1,
+    "empty_input": 556540,
+    "short_input": 7305,
+    "long_input": 865
+  },
+  "output_path": "data/processed/sft_train.jsonl",
+  "backup_path": "data/processed/sft_train.jsonl.bak"
+}

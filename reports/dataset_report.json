@@ -1,0 +1,113 @@
+{
+  "build_time": "2026-06-07T15:17:18.772530+00:00",
+  "summary": {
+    "raw_records": 9,
+    "clean_records": 9,
+    "valid_records": 9,
+    "schema_errors": 0,
+    "sft_records": 7,
+    "mm_sft_records": 2,
+    "average_quality_score": 1.0
+  },
+  "source_counts": {
+    "constitution_cases.jsonl": 3,
+    "tcm_knowledge.jsonl": 4,
+    "tongue_mm_samples.jsonl": 2
+  },
+  "clean_stats": {
+    "input_records": 9,
+    "output_records": 9,
+    "duplicate_ids": []
+  },
+  "schema_errors": [],
+  "quality": [
+    {
+      "id": "case_001",
+      "type": "constitution_case",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "case_002",
+      "type": "constitution_case",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "case_003",
+      "type": "constitution_case",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "kb_001",
+      "type": "knowledge",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "kb_002",
+      "type": "knowledge",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "kb_003",
+      "type": "knowledge",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "kb_004",
+      "type": "knowledge",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "tongue_001",
+      "type": "tongue_image",
+      "score": 1.0,
+      "issues": []
+    },
+    {
+      "id": "tongue_002",
+      "type": "tongue_image",
+      "score": 1.0,
+      "issues": []
+    }
+  ],
+  "training": {
+    "mode": "normal",
+    "profile_name": "normal_8gb_gpu_demo",
+    "hardware_hint": "normal模式，模型参数1.5B",
+    "base_model": "Qwen/Qwen2.5-1.5B-Instruct",
+    "finetuning_type": "lora",
+    "train_file": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\data\\processed\\sft_train.jsonl",
+    "config_file": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\configs\\tcm_qwen_normal_lora_sft.yaml",
+    "train_command": "llamafactory-cli train configs/tcm_qwen_normal_lora_sft.yaml",
+    "output_dir": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\outputs\\tcm_qwen_1_5b_lora",
+    "simulation_report": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\reports\\train_simulation_report.json",
+    "warning": "当前 Demo 部署环境支持两种模式，safe 模式使用 0.5B 模型，normal 模式使用 1.5B 模型。真实训练需要安装 LLaMA-Factory/MS-SWIFT/Transformers+PEFT，并准备可用 GPU 环境。"
+  },
+  "evaluation": {
+    "eval_report": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\reports\\eval_report.json",
+    "eval_mode": "simulation",
+    "eval_set_size": 10,
+    "constitution_accuracy": 0.78,
+    "macro_f1": 0.74,
+    "safety_notice_rate": 1.0,
+    "unsafe_advice_rate": 0.0,
+    "hallucination_rate": 0.06
+  },
+  "exports": {
+    "dataset_info": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\data\\processed\\dataset_info.json",
+    "train_config_yaml": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\configs\\tcm_qwen_normal_lora_sft.yaml",
+    "train_config_json": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\configs\\tcm_qwen_normal_lora_sft.json",
+    "adapter_output_dir": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\outputs\\tcm_qwen_1_5b_lora",
+    "train_simulation_report": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\reports\\train_simulation_report.json",
+    "train_loss_csv": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\reports\\train_loss.csv",
+    "eval_report": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\reports\\eval_report.json",
+    "sft_train": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\data\\processed\\sft_train.jsonl",
+    "mm_sft_train": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\data\\processed\\mm_sft_train.jsonl"
+  }
+}

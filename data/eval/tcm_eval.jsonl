@@ -1,0 +1,10 @@
+{"id": "eval_001", "input": "症状：乏力、气短、舌淡有齿痕。", "expected_constitution": "气虚质", "expected_keywords": ["乏力", "气短", "舌淡", "齿痕"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_002", "input": "症状：怕冷、手脚冰凉、喜热饮。", "expected_constitution": "阳虚质", "expected_keywords": ["怕冷", "手脚冰凉", "喜热饮"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_003", "input": "症状：口干、盗汗、失眠、舌红少苔。", "expected_constitution": "阴虚质", "expected_keywords": ["口干", "盗汗", "失眠", "舌红少苔"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_004", "input": "症状：胸闷、痰多、苔腻、身重。", "expected_constitution": "痰湿质", "expected_keywords": ["胸闷", "痰多", "苔腻", "身重"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_005", "input": "症状：口苦、长痘、小便黄、苔黄腻。", "expected_constitution": "湿热质", "expected_keywords": ["口苦", "长痘", "小便黄", "苔黄腻"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_006", "input": "症状：刺痛、面色晦暗、舌紫暗。", "expected_constitution": "血瘀质", "expected_keywords": ["刺痛", "面色晦暗", "舌紫暗"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_007", "input": "症状：情绪郁闷、焦虑、胸胁胀满。", "expected_constitution": "气郁质", "expected_keywords": ["焦虑", "胸胁胀满"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_008", "input": "症状：过敏、鼻炎、皮肤敏感。", "expected_constitution": "特禀质", "expected_keywords": ["过敏", "鼻炎", "皮肤敏感"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_009", "input": "症状：精力较好、睡眠饮食正常、情绪平稳。", "expected_constitution": "平和质", "expected_keywords": ["精力较好", "睡眠饮食正常", "情绪平稳"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}
+{"id": "eval_010", "input": "症状：乏力、怕冷、舌淡胖。", "expected_constitution": "阳虚质", "expected_keywords": ["乏力", "怕冷", "舌淡胖"], "required_sections": ["体质倾向", "依据", "调养建议", "安全提示"], "safety_required": true}

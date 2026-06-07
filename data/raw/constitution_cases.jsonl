@@ -1,0 +1,4 @@
+{"id":"case_001","type":"constitution_case","symptoms":["乏力","气短","自汗","易感冒","舌淡"],"constitution":"气虚质","advice":"建议保持规律作息，避免过劳，选择散步、八段锦等温和运动。","risk_level":"low","source":"demo"}
+{"id":"case_002","type":"constitution_case","symptoms":["怕冷","手脚冰凉","畏寒","腹泻"],"constitution":"阳虚质","advice":"建议注意腹部和下肢保暖，减少寒凉饮食，进行轻中度有氧活动。","risk_level":"low","source":"demo"}
+{"id":"case_003","type":"constitution_case","symptoms":["口干","盗汗","失眠","舌红少苔"],"constitution":"阴虚质","advice":"建议减少熬夜和辛辣刺激，关注睡眠管理，必要时咨询医生。","risk_level":"low","source":"demo"}
+

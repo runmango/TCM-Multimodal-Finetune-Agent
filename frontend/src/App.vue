@@ -1,0 +1,75 @@
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import { DataAnalysis, DocumentChecked, FirstAidKit, InfoFilled, Search, Service } from "@element-plus/icons-vue";
+
+import { DEFAULT_API_BASE_URL } from "@/api/tcmApi";
+import DisclaimerBar from "@/components/DisclaimerBar.vue";
+import StatusPanel from "@/components/StatusPanel.vue";
+
+const route = useRoute();
+const apiBaseUrl = ref(DEFAULT_API_BASE_URL);
+
+const activeRoute = computed(() => route.path);
+
+const menuItems = [
+  { path: "/constitution", title: "体质辨识", icon: FirstAidKit },
+  { path: "/rag-search", title: "知识库检索", icon: Search },
+  { path: "/dataset-build", title: "知识库构建", icon: DocumentChecked },
+  { path: "/digital-human", title: "数字人演示", icon: Service },
+  { path: "/about", title: "系统说明", icon: InfoFilled },
+];
+</script>
+
+<template>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand__mark">
+          <el-icon><DataAnalysis /></el-icon>
+        </div>
+        <div>
+          <div class="brand__name">中医演示系统</div>
+          <div class="brand__sub">RAG · 体质辨识 · 数据治理</div>
+        </div>
+      </div>
+
+      <el-menu :default-active="activeRoute" router class="side-menu">
+        <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
+          <el-icon><component :is="item.icon" /></el-icon>
+          <span>{{ item.title }}</span>
+        </el-menu-item>
+      </el-menu>
+
+      <section class="config-panel">
+        <div class="section-title">后端配置</div>
+        <el-input v-model="apiBaseUrl" clearable placeholder="http://127.0.0.1:8010" />
+        <StatusPanel :api-base-url="apiBaseUrl" />
+      </section>
+    </aside>
+
+    <main class="main-panel">
+      <header class="app-header">
+        <div>
+          <h1>中医知识库与体质辨识演示系统</h1>
+          <p>基于 RAG 的中医知识检索与体质倾向分析 Demo</p>
+        </div>
+        <el-tag size="large" effect="dark">Vue3 + FastAPI</el-tag>
+      </header>
+
+      <el-alert
+        class="intro-alert"
+        title="本系统为技术演示版，仅用于中医知识检索、体质倾向分析和工程能力展示，不作为临床诊断依据。"
+        type="info"
+        :closable="false"
+        show-icon
+      />
+
+      <router-view v-slot="{ Component }">
+        <component :is="Component" :api-base-url="apiBaseUrl" />
+      </router-view>
+    </main>
+
+    <DisclaimerBar />
+  </div>
+</template>

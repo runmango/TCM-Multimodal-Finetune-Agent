@@ -1,0 +1,3 @@
+{"id":"tongue_001","type":"tongue_image","image":"data/raw/images/tongue_placeholder_001.jpg","image_description":"舌淡胖，边有齿痕，苔薄白，整体提示气虚或脾虚倾向。","symptoms":["乏力","气短","齿痕","舌淡"],"constitution":"气虚质","labels":["舌淡","齿痕","苔薄白"],"source":"demo"}
+{"id":"tongue_002","type":"tongue_image","image":"data/raw/images/tongue_placeholder_002.jpg","image_description":"舌质偏红，苔少，伴口干与夜间盗汗，提示阴虚倾向。","symptoms":["口干","盗汗","舌红少苔"],"constitution":"阴虚质","labels":["舌红少苔","苔少"],"source":"demo"}
+

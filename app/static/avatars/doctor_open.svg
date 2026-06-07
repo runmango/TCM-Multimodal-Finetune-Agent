@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="doctor avatar mouth open">
+  <rect width="240" height="240" rx="24" fill="#eef7fb"/>
+  <circle cx="120" cy="88" r="52" fill="#ffd8c2"/>
+  <path d="M64 88c5-35 28-58 56-58s51 23 56 58c-18-8-37-12-56-12s-38 4-56 12z" fill="#204f7a"/>
+  <path d="M58 74c20-28 42-42 62-42s42 14 62 42c-36-12-76-12-124 0z" fill="#ffffff"/>
+  <rect x="72" y="138" width="96" height="76" rx="16" fill="#ffffff"/>
+  <path d="M92 138h56l-28 34z" fill="#d8ecf7"/>
+  <path d="M72 166h96" stroke="#1f78b4" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="101" cy="88" r="5" fill="#263b4a"/>
+  <circle cx="139" cy="88" r="5" fill="#263b4a"/>
+  <ellipse cx="120" cy="119" rx="13" ry="9" fill="#8e3e43"/>
+  <path d="M110 119c6 4 14 4 20 0" stroke="#ffd8d8" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="120" cy="106" r="3" fill="#dfad96"/>
+</svg>
+

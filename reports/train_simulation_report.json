@@ -1,0 +1,31 @@
+{
+  "mode": "simulation",
+  "train_mode": "normal",
+  "profile_name": "normal_8gb_gpu_demo",
+  "status": "success",
+  "total_samples": 7,
+  "trainable_method": "LoRA",
+  "base_model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "hardware_hint": "normal模式，模型参数1.5B",
+  "output_dir": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\outputs\\tcm_qwen_1_5b_lora",
+  "epochs": [
+    {
+      "epoch": 1,
+      "train_loss": 1.82
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.21
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.86
+    }
+  ],
+  "final_metrics": {
+    "final_train_loss": 0.86,
+    "simulated_eval_score": 0.62,
+    "simulated_overfit_risk": "high"
+  },
+  "note": "This is a simulation report for demo only. It does not represent real model training."
+}

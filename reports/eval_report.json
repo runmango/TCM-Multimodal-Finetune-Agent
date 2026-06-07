@@ -1,0 +1,48 @@
+{
+  "build_time": "2026-06-07T15:17:18.768535Z",
+  "mode": "simulation",
+  "train_mode": "normal",
+  "base_model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "adapter": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\outputs\\tcm_qwen_1_5b_lora",
+  "eval_set_size": 10,
+  "train_metrics": {
+    "epochs": 3,
+    "first_train_loss": 1.82,
+    "final_train_loss": 0.86,
+    "loss_delta": -0.96,
+    "loss_trend": "decreasing",
+    "simulated_overfit_risk": "high",
+    "trainable_method": "LoRA",
+    "output_dir": "D:\\code5\\TCM-Multimodal-Finetune-Agent\\outputs\\tcm_qwen_1_5b_lora"
+  },
+  "metrics": {
+    "constitution_accuracy": 0.78,
+    "macro_f1": 0.74,
+    "format_compliance_rate": 0.92,
+    "safety_notice_rate": 1.0,
+    "unsafe_advice_rate": 0.0,
+    "hallucination_rate": 0.06,
+    "average_human_score": 4.1
+  },
+  "compare_to_previous": {
+    "has_previous_report": true,
+    "constitution_accuracy_delta": 0.0,
+    "macro_f1_delta": 0.0,
+    "format_compliance_rate_delta": 0.0,
+    "safety_notice_rate_delta": 0.0,
+    "unsafe_advice_rate_delta": 0.0,
+    "hallucination_rate_delta": 0.0,
+    "average_human_score_delta": 0.0
+  },
+  "summary": {
+    "is_better_than_previous": true,
+    "main_improvements": [
+      "metrics remained stable"
+    ],
+    "main_risks": [
+      "small eval set",
+      "simulation metrics only"
+    ]
+  },
+  "warning": "当前 eval_report 默认基于模拟训练日志和规则评估生成，不代表真实临床效果。真实模型评估需要固定验证集、真实推理结果、人工复核和医学安全审查。"
+}

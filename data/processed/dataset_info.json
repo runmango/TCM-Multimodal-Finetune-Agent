@@ -1,0 +1,11 @@
+{
+  "tcm_sft": {
+    "file_name": "sft_train.jsonl",
+    "formatting": "alpaca",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    }
+  }
+}

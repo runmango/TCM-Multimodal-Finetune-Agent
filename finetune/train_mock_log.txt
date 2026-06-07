@@ -1,0 +1,9 @@
+[2026-06-06 10:00:00] INFO Load processed dataset: data/processed/sft_train.jsonl
+[2026-06-06 10:00:01] INFO Load multimodal dataset: data/processed/mm_sft_train.jsonl
+[2026-06-06 10:00:02] INFO Initialize LoRA adapters. target_modules=all rank=8 alpha=16
+[2026-06-06 10:00:03] INFO epoch=1 step=5 loss=1.842 lr=1.80e-4
+[2026-06-06 10:00:04] INFO epoch=2 step=10 loss=1.236 lr=1.20e-4
+[2026-06-06 10:00:05] INFO epoch=3 step=15 loss=0.924 lr=4.00e-5
+[2026-06-06 10:00:06] INFO Save adapter checkpoint to outputs/tcm_lora_sft_demo
+[2026-06-06 10:00:07] INFO This is a mock log for interview demo. Real training can be connected through LLaMA Factory or PEFT.
+
