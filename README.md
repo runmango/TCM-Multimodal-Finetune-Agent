@@ -1,6 +1,6 @@
 # TCM-Multimodal-Finetune-Agent
 
-基于 LangGraph 编排中医多模态微调数据集治理流水线，并提供中医知识问答、体质辨识问卷、数字人播报、安全拒答、FastAPI 接口和可视化演示页面。
+基于 LangGraph 编排中医多模态微调数据集治理流水线，并提供中医知识问答、向量 RAG、体质辨识问卷、四诊结构化、SQLite 记录持久化、数字人播报、安全拒答、FastAPI 接口和可视化演示页面。
 
 系统名称：
 
@@ -14,21 +14,25 @@
 .
 ├── app/
 │   ├── agents/              # DataLoad/Clean/Schema/Quality/SFT/MM/Export 与推理 Agent
-│   ├── core/                # 路径与基础配置
+│   ├── core/                # 路径、响应、体质量表条目与基础配置
+│   ├── db/                  # SQLite 连接、DDL 与初始化
 │   ├── graphs/              # LangGraph 数据集构建图与推理图
+│   ├── repositories/        # 体质辨识记录持久化与查询
 │   ├── schemas/             # FastAPI Pydantic schema
-│   ├── services/            # dataset build 与 keyword RAG service
+│   ├── scripts/             # 向量索引构建脚本
+│   ├── services/            # dataset build、向量 RAG、正式量表算法、数字人服务
 │   └── main.py              # FastAPI app
 ├── data/
 │   ├── raw/                 # 中医知识库、体质辨识、多模态舌象 demo jsonl
 │   ├── processed/           # 运行后生成 sft_train.jsonl、mm_sft_train.jsonl
-│   └── reports/             # 运行后生成 dataset_report.json
+│   ├── reports/             # 运行后生成 dataset_report.json
+│   ├── vector_store/        # 本地向量索引运行产物，已 gitignore
+│   └── app.db               # SQLite 运行产物，已 gitignore
 ├── finetune/
 │   ├── lora_sft.yaml        # LoRA demo 配置
 │   ├── qlora_sft.yaml       # QLoRA demo 配置
-│   └── train_mock_log.txt   # mock 训练日志
 ├── tests/                   # pytest 测试
-├── streamlit_app.py         # Streamlit 可视化演示界面
+├── streamlit_app.py         # Streamlit 兼容演示界面
 └── requirements.txt
 ```
 
@@ -68,11 +72,25 @@ npm install
 npm run dev
 ```
 
+启动 5175 数据记录与分析后台：
+
+```bash
+cd frontend
+npm run dev:admin
+```
+
+可选：预先构建向量索引：
+
+```bash
+python -m app.scripts.build_vector_index
+```
+
 浏览器访问：
 
 ```text
 Streamlit: http://localhost:8501
 Vue3: http://localhost:5173
+分析后台: http://127.0.0.1:5175
 ```
 
 运行测试：
@@ -81,47 +99,18 @@ Vue3: http://localhost:5173
 pytest -q
 ```
 
-## Streamlit 演示页面（兼容版）
-
-页面名称：
-
-```text
-中医知识库与体质辨识演示系统
-```
-
-页面副标题：
-
-```text
-基于 RAG 的中医知识检索与体质倾向分析 Demo
-```
-
-侧边栏提供：
-
-- 后端服务地址配置，默认 `http://127.0.0.1:8010`
-- `top_k` 数量选择，范围 1 到 10，默认 3
-- 后端接口连通性提示
-- 技术演示免责声明
-
-主页面保留早期三个 Tab，用于兼容原始接口演示：
-
-- 体质辨识：调用 `POST /api/v1/infer/constitution`
-- 知识库检索：调用 `POST /api/v1/rag/search`
-- 知识库构建：调用 `POST /api/v1/dataset/build`
-
-如果后端未启动、接口不存在、请求超时、后端 500 或返回非 JSON，页面会展示友好提示，技术详情放在 expander 中。
-
 ## Vue3 演示页面
 
 Vue3 前端位于 `frontend/`，使用 Vite、TypeScript、Element Plus 和 Axios。
 
 页面包含：
 
-- 首页 / 系统概览：展示产品边界、后端能力和安全声明。
-- 中医知识问答：调用 `POST /api/v1/knowledge/ask`，自由输入只用于知识解释。
-- 体质辨识问卷：调用 `GET /api/v1/constitution/questionnaire` 和 `POST /api/v1/constitution/questionnaire/submit`。
+- 首页 / 系统概览：展示采集层、判断层、解释层、应用层四层架构和业务链路。
+- 体质辨识问卷：支持问诊量表、可选舌象上传、四诊结构化 JSON、正式转化分算法、SQLite 记录保存和 RAG 解释。
+- 中医知识问答：调用 `POST /api/v1/knowledge/ask`，优先走本地向量检索，失败时 fallback 到关键词检索和安全兜底。
+- 数字人播报：调用 `POST /api/v1/digital-human/speak`，用 Web 3D 数字人只播报已生成文本。
 - 数据集与微调：调用 `POST /api/v1/dataset/build`，刷新 demo 数据治理产物和训练配置。
 - 评估报告：展示 `reports/eval_report.json` 的 CLI 生成入口。
-- 数字人播报：调用 `POST /api/v1/digital-human/speak`，用 Web 3D 数字人只播报已生成文本。
 
 运行方式：
 
@@ -145,15 +134,49 @@ VITE_API_BASE_URL=http://127.0.0.1:8010
 VITE_PROXY_TARGET=http://127.0.0.1:8010
 ```
 
+### 数据记录与分析后台
+
+支持 admin 模式，运行在 `5175`，用于查看 SQLite 中的体质辨识历史记录、四诊详情、体质分布、RAG 来源和数字人播报文本。
+
+启动方式：
+
+```bash
+cd frontend
+npm run dev:admin
+```
+
+浏览器访问：
+
+```text
+http://127.0.0.1:5175
+```
+
+构建方式：
+
+```bash
+cd frontend
+npm run build:admin
+```
+
+后台默认读取：
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8010
+VITE_MAIN_FRONTEND_URL=http://127.0.0.1:5173
+```
+
+后台页面仅用于技术演示、数据追踪和系统评估，不采集姓名、手机号、身份证号等个人敏感信息。
+
 ## 数字人播报子页面
 
-项目在主 Vue 前端“中医知识库与体质辨识演示系统”中集成了“Web 3D 数字人播报”子页面，用于面试展示应用层闭环。它不进入训练 Pipeline，不修改 DataLoad/SFT/Train/Eval 等主链路；页面只调用 `app.api.main:app` 提供的 TTS、字幕生成和安全提示结果，前端用 Three.js 渲染 3D 医生并用 Web Audio API 驱动嘴巴开合。
+项目在主 Vue 前端“中医知识库与体质辨识演示系统”中集成了“Web 3D 数字人播报”子页面，前端用 Three.js 渲染 3D 医生并用 Web Audio API 驱动嘴巴开合。
 
 后端接口：
 
 - `GET /health`
 - `GET /api/v1/constitution/questionnaire`
 - `POST /api/v1/constitution/questionnaire/submit`
+- `POST /api/v1/constitution/full-infer`
 - `POST /api/v1/knowledge/ask`
 - `POST /api/v1/tts/generate`
 - `POST /api/v1/digital-human/speak`
@@ -201,14 +224,6 @@ frontend/public/models/doctor.glb
 
 如果没有模型文件，前端会自动使用 Three.js fallback 3D 医生模型。
 
-示例请求：
-
-```bash
-curl -X POST http://127.0.0.1:8010/api/v1/digital-human/speak \
-  -H "Content-Type: application/json; charset=utf-8" \
-  -d '{"scene":"knowledge_answer","text":"气虚质常见表现包括容易疲乏、气短、自汗等。","voice":"zh-CN-XiaoxiaoNeural"}'
-```
-
 如果 `edge-tts` 因网络或运行环境不可用，接口会返回文本、头像状态和字幕，并将 `tts_status` 标记为 `failed`，前端会降级为文本播报结果展示。旧 `/api/v1/digital-human/talk` 已标记 deprecated，不再执行“症状 -> 体质判断”。
 
 后续可以在 `app/services/knowledge_qa_service.py` 中加入 LoRA/QLoRA adapter 推理分支；也可以把当前 Web 3D 占位医生升级为授权 VRM、Live2D、Wav2Lip、MuseTalk 或 SadTalker 一类的视频数字人方案。
@@ -246,7 +261,29 @@ curl http://127.0.0.1:8010/api/v1/constitution/questionnaire
 ```bash
 curl -X POST http://127.0.0.1:8010/api/v1/constitution/questionnaire/submit \
   -H "Content-Type: application/json; charset=utf-8" \
-  -d '{"answers":[{"question_id":"q004","score":5},{"question_id":"q005","score":5},{"question_id":"q006","score":5}]}'
+  -d '{"answers":[{"question_id":"fatigue","score":5},{"question_id":"shortness_of_breath","score":5},{"question_id":"spontaneous_sweating","score":4},{"question_id":"easy_cold","score":4}],"tongue_features":{"tongue_color":"淡","tongue_coating":"薄白","teeth_marks":true}}'
+```
+
+完整体质辨识闭环：
+
+```bash
+curl -X POST http://127.0.0.1:8010/api/v1/constitution/full-infer \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -d '{"answers":[{"question_id":"fatigue","score":5},{"question_id":"shortness_of_breath","score":5},{"question_id":"spontaneous_sweating","score":4},{"question_id":"easy_cold","score":4}],"top_k":3}'
+```
+
+重建向量索引：
+
+```bash
+curl -X POST http://127.0.0.1:8010/api/v1/rag/rebuild
+```
+
+查看体质辨识历史记录：
+
+```bash
+curl "http://127.0.0.1:8010/api/v1/constitution/records?limit=20&offset=0"
+curl http://127.0.0.1:8010/api/v1/constitution/analytics/summary
+curl http://127.0.0.1:8010/api/v1/constitution/analytics/distribution
 ```
 
 数字人播报：
@@ -287,17 +324,6 @@ RequestValidateAgent
 ```
 
 仓库包含一个轻量 LangGraph 兼容层：安装 `langgraph` 时使用真实 `StateGraph`；未安装时可用同样接口跑通本地测试，便于面试现场快速演示。
-
-## 演示流程
-
-1. 启动 FastAPI 后端：`uvicorn app.api.main:app --host 127.0.0.1 --port 8010 --reload`
-2. 启动 Vue3 前端：`cd frontend && npm run dev`
-3. 打开“中医知识问答”，输入“气虚质有哪些表现？如何调养？”，展示知识解释和来源。
-4. 点击“让数字人播报此回答”，确认数字人只播报已生成文本。
-5. 打开“体质辨识问卷”，填写量表并提交，展示主要体质、兼夹体质和九种体质得分。
-6. 点击“让数字人播报问卷结果”，展示 TTS、字幕和头像状态。
-7. 打开“数据集与微调”，演示 LangGraph 数据治理与训练配置产物。
-8. 运行 `pytest -q`，证明关键链路可回归。
 
 ## 微调扩展
 
@@ -392,11 +418,3 @@ data/eval/tcm_eval.jsonl
 - 将 `data/processed/mm_sft_train.jsonl` 转换为目标多模态模型格式。
 - 使用 `finetune/lora_sft.yaml` 或 `finetune/qlora_sft.yaml` 作为 LoRA/QLoRA 起点。
 - 用 PEFT、Transformers、bitsandbytes 接入真实训练与 adapter 导出。
-
-## 局限性
-
-- RAG 当前是关键词检索，不包含 embedding、rerank 或向量库。
-- 体质判断是规则打分，不是医学模型，也不构成诊断。
-- 舌象图片使用占位路径，Demo 只治理 `image_description` 和元数据。
-- Streamlit 页面用于演示，不包含登录、权限、审计和生产级前端工程。
-- 安全策略是关键词级别，生产系统需要更完整的医疗安全分类器、审计和人工兜底。
