@@ -16,7 +16,8 @@ const props = withDefaults(
 );
 
 const activeIndex = computed(() => {
-  if (!props.speaking || props.subtitles.length === 0) return -1;
+  if (props.subtitles.length === 0) return -1;
+  if (!props.speaking) return props.broadcastText ? props.subtitles.length - 1 : -1;
   const exactIndex = props.subtitles.findIndex(
     (item) => props.currentTime >= Number(item.start) && props.currentTime < Number(item.end),
   );
@@ -106,7 +107,8 @@ const activeIndex = computed(() => {
 .subtitle-panel__full p {
   margin: 0;
   color: #263b4a;
-  line-height: 1.75;
+  line-height: 1.8;
+  font-size: 16px;
 }
 
 .subtitle-panel__full {

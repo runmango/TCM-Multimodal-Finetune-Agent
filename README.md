@@ -1,6 +1,6 @@
 # TCM-Multimodal-Finetune-Agent
 
-基于 LangGraph 编排中医多模态微调数据集治理流水线，并提供关键词 RAG 推理、体质辨识、安全拒答、FastAPI 接口和 Streamlit 可视化演示页面。
+基于 LangGraph 编排中医多模态微调数据集治理流水线，并提供中医知识问答、体质辨识问卷、数字人播报、安全拒答、FastAPI 接口和可视化演示页面。
 
 系统名称：
 
@@ -81,7 +81,7 @@ Vue3: http://localhost:5173
 pytest -q
 ```
 
-## Streamlit 演示页面
+## Streamlit 演示页面（兼容版）
 
 页面名称：
 
@@ -102,7 +102,7 @@ pytest -q
 - 后端接口连通性提示
 - 技术演示免责声明
 
-主页面包含三个 Tab：
+主页面保留早期三个 Tab，用于兼容原始接口演示：
 
 - 体质辨识：调用 `POST /api/v1/infer/constitution`
 - 知识库检索：调用 `POST /api/v1/rag/search`
@@ -116,10 +116,12 @@ Vue3 前端位于 `frontend/`，使用 Vite、TypeScript、Element Plus 和 Axio
 
 页面包含：
 
-- 体质辨识：调用 `POST /api/v1/infer/constitution`
-- 知识库检索：调用 `POST /api/v1/rag/search`
-- 知识库构建：调用 `POST /api/v1/dataset/build`
-- 系统说明：展示工程链路和免责声明
+- 首页 / 系统概览：展示产品边界、后端能力和安全声明。
+- 中医知识问答：调用 `POST /api/v1/knowledge/ask`，自由输入只用于知识解释。
+- 体质辨识问卷：调用 `GET /api/v1/constitution/questionnaire` 和 `POST /api/v1/constitution/questionnaire/submit`。
+- 数据集与微调：调用 `POST /api/v1/dataset/build`，刷新 demo 数据治理产物和训练配置。
+- 评估报告：展示 `reports/eval_report.json` 的 CLI 生成入口。
+- 数字人播报：调用 `POST /api/v1/digital-human/speak`，用 Web 3D 数字人只播报已生成文本。
 
 运行方式：
 
@@ -143,18 +145,20 @@ VITE_API_BASE_URL=http://127.0.0.1:8010
 VITE_PROXY_TARGET=http://127.0.0.1:8010
 ```
 
-## 数字人演示子页面
+## 数字人播报子页面
 
-项目在主 Vue 前端“中医知识库与体质辨识演示系统”中集成了“中医体质辨识数字人演示”子页面，用于面试展示应用层闭环。它不进入训练 Pipeline，不修改 DataLoad/SFT/Train/Eval 等主链路；页面只调用 `app.api.main:app` 提供的体质规则判断、TTS 语音生成、医生头像开合口状态和字幕结果。
+项目在主 Vue 前端“中医知识库与体质辨识演示系统”中集成了“Web 3D 数字人播报”子页面，用于面试展示应用层闭环。它不进入训练 Pipeline，不修改 DataLoad/SFT/Train/Eval 等主链路；页面只调用 `app.api.main:app` 提供的 TTS、字幕生成和安全提示结果，前端用 Three.js 渲染 3D 医生并用 Web Audio API 驱动嘴巴开合。
 
 后端接口：
 
 - `GET /health`
-- `POST /api/v1/constitution/infer`
+- `GET /api/v1/constitution/questionnaire`
+- `POST /api/v1/constitution/questionnaire/submit`
+- `POST /api/v1/knowledge/ask`
 - `POST /api/v1/tts/generate`
-- `POST /api/v1/digital-human/talk`
+- `POST /api/v1/digital-human/speak`
 
-启动数字人后端：
+启动应用后端：
 
 ```bash
 uvicorn app.api.main:app --host 127.0.0.1 --port 8010 --reload
@@ -186,19 +190,28 @@ npm run dev
 http://localhost:5173/digital-human
 ```
 
-从主系统左侧导航点击“数字人演示”即可进入该子页面。端口约定：`frontend/` 是“中医知识库与体质辨识演示系统”，优先使用 `5173`；数字人演示不再需要单独启动独立前端。
+从主系统左侧导航点击“数字人播报”即可进入该子页面。端口约定：`frontend/` 是“中医知识库与体质辨识演示系统”，优先使用 `5173`；数字人播报不再需要单独启动独立前端。
+
+可选 3D 模型放置位置：
+
+```text
+frontend/public/models/doctor.vrm
+frontend/public/models/doctor.glb
+```
+
+如果没有模型文件，前端会自动使用 Three.js fallback 3D 医生模型。
 
 示例请求：
 
 ```bash
-curl -X POST http://127.0.0.1:8010/api/v1/digital-human/talk \
+curl -X POST http://127.0.0.1:8010/api/v1/digital-human/speak \
   -H "Content-Type: application/json; charset=utf-8" \
-  -d '{"query":"乏力、气短、舌淡有齿痕"}'
+  -d '{"scene":"knowledge_answer","text":"气虚质常见表现包括容易疲乏、气短、自汗等。","voice":"zh-CN-XiaoxiaoNeural"}'
 ```
 
-如果 `edge-tts` 因网络或运行环境不可用，接口会返回文本、体质倾向、头像状态和字幕，并将 `tts_status` 标记为 `failed`，前端会降级为文本播报结果展示。
+如果 `edge-tts` 因网络或运行环境不可用，接口会返回文本、头像状态和字幕，并将 `tts_status` 标记为 `failed`，前端会降级为文本播报结果展示。旧 `/api/v1/digital-human/talk` 已标记 deprecated，不再执行“症状 -> 体质判断”。
 
-后续可以将 `app/services/inference_service.py` 中的规则后端替换为 LoRA/QLoRA adapter 推理服务；也可以把当前 SVG 开合口头像升级为 Live2D、Wav2Lip、MuseTalk 或 SadTalker 一类的视频数字人方案。
+后续可以在 `app/services/knowledge_qa_service.py` 中加入 LoRA/QLoRA adapter 推理分支；也可以把当前 Web 3D 占位医生升级为授权 VRM、Live2D、Wav2Lip、MuseTalk 或 SadTalker 一类的视频数字人方案。
 
 ## API 示例
 
@@ -214,28 +227,34 @@ curl http://127.0.0.1:8010/api/v1/health
 curl -X POST http://127.0.0.1:8010/api/v1/dataset/build
 ```
 
-RAG 检索：
+中医知识问答：
 
 ```bash
-curl -X POST http://127.0.0.1:8010/api/v1/rag/search \
+curl -X POST http://127.0.0.1:8010/api/v1/knowledge/ask \
   -H "Content-Type: application/json; charset=utf-8" \
-  -d '{"query":"乏力气短舌淡齿痕","top_k":3}'
+  -d '{"query":"气虚质有哪些表现？如何调养？","top_k":3}'
 ```
 
-体质倾向推理：
+获取体质辨识问卷：
 
 ```bash
-curl -X POST http://127.0.0.1:8010/api/v1/infer/constitution \
-  -H "Content-Type: application/json; charset=utf-8" \
-  -d '{"query":"我最近乏力气短，自汗，舌淡有齿痕，想了解体质倾向。","top_k":3}'
+curl http://127.0.0.1:8010/api/v1/constitution/questionnaire
 ```
 
-安全拒答示例：
+提交体质辨识问卷：
 
 ```bash
-curl -X POST http://127.0.0.1:8010/api/v1/infer/constitution \
+curl -X POST http://127.0.0.1:8010/api/v1/constitution/questionnaire/submit \
   -H "Content-Type: application/json; charset=utf-8" \
-  -d '{"query":"请帮我确诊，并开药和处方。我最近怕冷手脚冰凉。","top_k":3}'
+  -d '{"answers":[{"question_id":"q004","score":5},{"question_id":"q005","score":5},{"question_id":"q006","score":5}]}'
+```
+
+数字人播报：
+
+```bash
+curl -X POST http://127.0.0.1:8010/api/v1/digital-human/speak \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -d '{"scene":"knowledge_answer","text":"气虚质常见表现包括容易疲乏、气短、自汗等。"}'
 ```
 
 ## LangGraph 流水线
@@ -271,13 +290,13 @@ RequestValidateAgent
 
 ## 演示流程
 
-1. 启动 FastAPI 后端：`uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload`
-2. 启动 Streamlit 页面：`streamlit run streamlit_app.py`
-3. 在侧边栏确认后端服务已连接。
-4. 打开“知识库构建”Tab，点击“构建/刷新知识库”，生成 processed 数据和 report。
-5. 打开“知识库检索”Tab，输入“乏力气短舌淡齿痕”，展示召回证据卡片。
-6. 打开“体质辨识”Tab，使用默认症状文本，展示体质倾向、分析结论、安全状态和参考知识。
-7. 输入“请帮我确诊，并开药和处方”，展示安全拒答能力。
+1. 启动 FastAPI 后端：`uvicorn app.api.main:app --host 127.0.0.1 --port 8010 --reload`
+2. 启动 Vue3 前端：`cd frontend && npm run dev`
+3. 打开“中医知识问答”，输入“气虚质有哪些表现？如何调养？”，展示知识解释和来源。
+4. 点击“让数字人播报此回答”，确认数字人只播报已生成文本。
+5. 打开“体质辨识问卷”，填写量表并提交，展示主要体质、兼夹体质和九种体质得分。
+6. 点击“让数字人播报问卷结果”，展示 TTS、字幕和头像状态。
+7. 打开“数据集与微调”，演示 LangGraph 数据治理与训练配置产物。
 8. 运行 `pytest -q`，证明关键链路可回归。
 
 ## 微调扩展

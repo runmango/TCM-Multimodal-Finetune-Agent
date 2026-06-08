@@ -32,6 +32,15 @@ class DigitalHumanRequest(BaseModel):
     voice: str = "zh-CN-XiaoxiaoNeural"
 
 
+DigitalHumanScene = Literal["constitution_result", "knowledge_answer", "general_notice"]
+
+
+class DigitalHumanSpeakRequest(BaseModel):
+    scene: DigitalHumanScene = "general_notice"
+    text: str = Field(..., min_length=1, max_length=1200)
+    voice: str = "zh-CN-XiaoxiaoNeural"
+
+
 class AvatarState(BaseModel):
     closed: str
     open: str
@@ -44,12 +53,16 @@ class SubtitleItem(BaseModel):
     text: str
 
 
-class DigitalHumanResponse(BaseModel):
+class DigitalHumanSpeakResponse(BaseModel):
+    scene: DigitalHumanScene
     text: str
-    constitution: str
     audio_url: Optional[str] = None
     avatar: AvatarState
     subtitles: List[SubtitleItem]
     safety_notice: str
     tts_status: str = "success"
     message: Optional[str] = None
+
+
+class DigitalHumanResponse(DigitalHumanSpeakResponse):
+    constitution: Optional[str] = None

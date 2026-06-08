@@ -1,5 +1,5 @@
 {
-  "build_time": "2026-06-07T15:17:18.768535Z",
+  "build_time": "2026-06-07T18:05:55.777873Z",
   "mode": "simulation",
   "train_mode": "normal",
   "base_model": "Qwen/Qwen2.5-1.5B-Instruct",

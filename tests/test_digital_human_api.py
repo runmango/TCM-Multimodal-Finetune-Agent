@@ -15,7 +15,7 @@ def test_digital_human_health() -> None:
 
 def test_digital_human_cors_allows_dedicated_vite_port() -> None:
     response = client.options(
-        "/api/v1/digital-human/talk",
+        "/api/v1/digital-human/speak",
         headers={
             "Origin": "http://127.0.0.1:5175",
             "Access-Control-Request-Method": "POST",
@@ -52,7 +52,7 @@ def test_legacy_streamlit_infer_route_is_available() -> None:
     assert "disclaimer" in data
 
 
-def test_digital_human_talk_returns_text_avatar_and_subtitles(monkeypatch) -> None:
+def test_digital_human_speak_returns_text_avatar_and_subtitles(monkeypatch) -> None:
     async def fake_generate_tts(text: str, voice: str) -> dict:
         return {
             "audio_url": None,
@@ -64,14 +64,18 @@ def test_digital_human_talk_returns_text_avatar_and_subtitles(monkeypatch) -> No
     monkeypatch.setattr("app.services.digital_human_service.generate_tts", fake_generate_tts)
 
     response = client.post(
-        "/api/v1/digital-human/talk",
-        json={"query": "乏力、气短、舌淡有齿痕", "voice": "zh-CN-XiaoxiaoNeural"},
+        "/api/v1/digital-human/speak",
+        json={
+            "scene": "constitution_result",
+            "text": "根据本次问卷结果，您的主要体质倾向为气虚质。",
+            "voice": "zh-CN-XiaoxiaoNeural",
+        },
     )
 
     data = response.json()
     assert response.status_code == 200
-    assert data["constitution"] == "气虚质"
-    assert "体质倾向" in data["text"]
+    assert data["scene"] == "constitution_result"
+    assert "主要体质倾向为气虚质" in data["text"]
     assert "仅供健康科普参考，不替代医生诊疗。" in data["text"]
     assert data["audio_url"] is None
     assert data["avatar"]["closed"].endswith("doctor_closed.svg")
@@ -79,6 +83,24 @@ def test_digital_human_talk_returns_text_avatar_and_subtitles(monkeypatch) -> No
     assert data["subtitles"]
     assert data["tts_status"] == "failed"
     assert "仅供健康科普参考" in data["safety_notice"]
+
+
+def test_deprecated_digital_human_talk_no_longer_infers_constitution(monkeypatch) -> None:
+    async def fake_generate_tts(text: str, voice: str) -> dict:
+        return {"audio_url": None, "text": text, "tts_status": "failed", "message": "TTS disabled in test."}
+
+    monkeypatch.setattr("app.services.digital_human_service.generate_tts", fake_generate_tts)
+
+    response = client.post(
+        "/api/v1/digital-human/talk",
+        json={"query": "乏力、气短、舌淡有齿痕", "voice": "zh-CN-XiaoxiaoNeural"},
+    )
+
+    data = response.json()
+    assert response.status_code == 200
+    assert data["constitution"] is None
+    assert "数字人播报接口已调整" in data["text"]
+    assert "气虚质" not in data["text"]
 
 
 def test_tts_route_handles_failed_tts(monkeypatch) -> None:

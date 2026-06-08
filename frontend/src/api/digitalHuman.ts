@@ -7,8 +7,8 @@ export interface DigitalHumanSubtitle {
 }
 
 export interface DigitalHumanResponse {
+  scene: "constitution_result" | "knowledge_answer" | "general_notice";
   text: string;
-  constitution: string;
   audio_url?: string | null;
   avatar: {
     closed: string;
@@ -67,6 +67,40 @@ export async function talkToDigitalHuman(
         status: response.status,
         detail: data,
         url: "/api/v1/digital-human/talk",
+      } satisfies ApiFriendlyError;
+    }
+
+    return data as DigitalHumanResponse;
+  } catch (error) {
+    throw normalizeDigitalHumanError(error);
+  }
+}
+
+export async function speakWithDigitalHuman(
+  scene: "constitution_result" | "knowledge_answer" | "general_notice",
+  text: string,
+  voice = "zh-CN-XiaoxiaoNeural",
+  baseUrl?: string,
+): Promise<DigitalHumanResponse> {
+  try {
+    const response = await fetch(buildApiUrl(baseUrl, "/api/v1/digital-human/speak"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ scene, text, voice }),
+    });
+
+    const responseText = await response.text();
+    const data = responseText ? JSON.parse(responseText) : {};
+
+    if (!response.ok) {
+      throw {
+        message: response.status === 404 ? "数字人播报接口不存在，请检查后端入口。" : "数字人播报接口返回异常。",
+        status: response.status,
+        detail: data,
+        url: "/api/v1/digital-human/speak",
       } satisfies ApiFriendlyError;
     }
 

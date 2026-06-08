@@ -1,20 +1,24 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import ConstitutionView from "@/views/ConstitutionView.vue";
+import ConstitutionQuestionnaireView from "@/views/ConstitutionQuestionnaireView.vue";
 import DatasetBuildView from "@/views/DatasetBuildView.vue";
 import DigitalHumanView from "@/views/DigitalHumanView.vue";
-import RagSearchView from "@/views/RagSearchView.vue";
+import EvalReportView from "@/views/EvalReportView.vue";
+import KnowledgeAskView from "@/views/KnowledgeAskView.vue";
 import SystemInfoView from "@/views/SystemInfoView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", redirect: "/constitution" },
-    { path: "/constitution", name: "constitution", component: ConstitutionView },
-    { path: "/rag-search", name: "rag-search", component: RagSearchView },
+    { path: "/", name: "home", component: SystemInfoView },
+    { path: "/knowledge-ask", name: "knowledge-ask", component: KnowledgeAskView },
+    { path: "/constitution-questionnaire", name: "constitution-questionnaire", component: ConstitutionQuestionnaireView },
     { path: "/dataset-build", name: "dataset-build", component: DatasetBuildView },
+    { path: "/eval-report", name: "eval-report", component: EvalReportView },
     { path: "/digital-human", name: "digital-human", component: DigitalHumanView },
-    { path: "/about", name: "about", component: SystemInfoView },
+    { path: "/about", redirect: "/" },
+    { path: "/constitution", redirect: "/constitution-questionnaire" },
+    { path: "/rag-search", redirect: "/knowledge-ask" },
   ],
 });
 

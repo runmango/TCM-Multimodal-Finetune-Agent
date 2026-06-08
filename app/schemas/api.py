@@ -33,6 +33,8 @@ class RAGSearchItem(BaseModel):
 class RAGSearchResponse(BaseModel):
     query: str
     results: List[RAGSearchItem]
+    retriever_type: str = "keyword"
+    fallback_used: bool = False
 
 
 class ConstitutionInferRequest(BaseModel):
@@ -54,4 +56,3 @@ class ConstitutionInferResponse(BaseModel):
     safety: SafetyResult
     disclaimer: str
     answer: str
-

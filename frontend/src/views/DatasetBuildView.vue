@@ -31,8 +31,8 @@ async function submit() {
   <section class="tool-surface">
     <div class="view-heading">
       <div>
-        <h2>知识库构建</h2>
-        <p>调用后端 LangGraph 数据治理流水线，刷新 SFT、MM-SFT 数据和质量报告。</p>
+        <h2>数据集与微调</h2>
+        <p>调用后端 LangGraph 数据治理流水线，刷新 demo SFT、MM-SFT、训练配置和质量报告。</p>
       </div>
     </div>
     <el-button type="primary" size="large" :icon="RefreshRight" :loading="loading" @click="submit">
@@ -78,4 +78,3 @@ async function submit() {
     </section>
   </section>
 </template>
-

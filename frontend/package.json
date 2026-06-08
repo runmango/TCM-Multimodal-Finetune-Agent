@@ -5,18 +5,24 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
+    "dev:admin": "vite --host 127.0.0.1 --port 5175 --mode admin",
     "build": "vue-tsc -b && vite build",
+    "build:admin": "vue-tsc -b && vite build --mode admin --outDir dist-admin",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
     "typecheck": "vue-tsc -b"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
+    "@pixiv/three-vrm": "^3.5.3",
+    "@types/three": "^0.184.1",
     "axios": "^1.7.9",
     "element-plus": "^2.9.3",
+    "three": "^0.184.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^22.10.5",
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "^5.7.2",

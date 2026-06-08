@@ -14,7 +14,7 @@ MAX_TTS_CHARS = 500
 async def generate_tts(text: str, voice: str = "zh-CN-XiaoxiaoNeural") -> Dict[str, Any]:
     """Generate TTS audio with edge-tts, returning a safe fallback on failure."""
 
-    safe_text = ensure_safety_notice((text or "").strip())[:MAX_TTS_CHARS]
+    safe_text = _fit_tts_text(ensure_safety_notice((text or "").strip()))
     TTS_DIR.mkdir(parents=True, exist_ok=True)
     file_name = "tts_%s_%s.mp3" % (datetime.now().strftime("%Y%m%d_%H%M%S"), uuid4().hex[:8])
     output_path = TTS_DIR / file_name
@@ -48,3 +48,13 @@ def ensure_safety_notice(text: str) -> str:
     if text.endswith("。"):
         return text + "安全提示：" + SAFETY_NOTICE
     return text + "。安全提示：" + SAFETY_NOTICE
+
+
+def _fit_tts_text(text: str) -> str:
+    if len(text) <= MAX_TTS_CHARS:
+        return text
+    suffix = "安全提示：" + SAFETY_NOTICE
+    if len(suffix) >= MAX_TTS_CHARS:
+        return suffix[:MAX_TTS_CHARS]
+    prefix_limit = MAX_TTS_CHARS - len(suffix)
+    return text[:prefix_limit].rstrip("，。；;、 ") + "。" + suffix

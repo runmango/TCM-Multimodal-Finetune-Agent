@@ -3,15 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List
 
-from app.services.inference_service import SAFETY_NOTICE, infer_constitution
+from app.services.inference_service import SAFETY_NOTICE
 from app.services.tts_service import generate_tts
-
-
-def build_broadcast_text(inference: Dict[str, str]) -> str:
-    return (
-        "体质倾向：%s。依据：%s调养建议：%s安全提示：%s"
-        % (inference["constitution"], inference["reason"], inference["advice"], inference["safety_notice"])
-    )
 
 
 def build_subtitles(text: str) -> List[Dict[str, Any]]:
@@ -25,24 +18,45 @@ def build_subtitles(text: str) -> List[Dict[str, Any]]:
     return subtitles
 
 
-async def build_digital_human_response(query: str, voice: str = "zh-CN-XiaoxiaoNeural") -> Dict[str, Any]:
-    inference = infer_constitution(query=query, backend="rule")
-    text = build_broadcast_text(inference)
-    tts_result = await generate_tts(text=text, voice=voice)
+def ensure_safety_notice(text: str) -> str:
+    normalized = (text or "").strip()
+    if SAFETY_NOTICE in normalized:
+        return normalized
+    if normalized.endswith("。"):
+        return normalized + SAFETY_NOTICE
+    return normalized + "。" + SAFETY_NOTICE
+
+
+async def build_speak_response(
+    scene: str,
+    text: str,
+    voice: str = "zh-CN-XiaoxiaoNeural",
+) -> Dict[str, Any]:
+    safe_text = ensure_safety_notice(text)
+    tts_result = await generate_tts(text=safe_text, voice=voice)
     audio_url = tts_result.get("audio_url")
 
     return {
-        "text": tts_result.get("text") or text,
-        "constitution": inference["constitution"],
+        "scene": scene,
+        "text": safe_text,
         "audio_url": audio_url,
         "avatar": {
             "closed": "/static/avatars/doctor_closed.svg",
             "open": "/static/avatars/doctor_open.svg",
             "status": "speaking" if audio_url else "text_only",
         },
-        "subtitles": build_subtitles(text),
+        "subtitles": build_subtitles(safe_text),
         "safety_notice": SAFETY_NOTICE,
         "tts_status": tts_result.get("tts_status", "failed"),
         "message": tts_result.get("message"),
     }
 
+
+async def build_digital_human_response(query: str, voice: str = "zh-CN-XiaoxiaoNeural") -> Dict[str, Any]:
+    deprecated_text = (
+        "数字人播报接口已调整为只播报已经生成的文本结果。"
+        "请先在中医知识问答或体质辨识问卷页面生成结果后，再调用播报功能。"
+    )
+    result = await build_speak_response(scene="general_notice", text=deprecated_text, voice=voice)
+    result["constitution"] = None
+    return result

@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
-import { DataAnalysis } from "@element-plus/icons-vue";
+import { computed, nextTick, onMounted, ref } from "vue";
+import { ElMessage } from "element-plus";
 
-import {
-  resolveBackendAssetUrl,
-  talkToDigitalHuman,
-  type DigitalHumanResponse,
-} from "@/api/digitalHuman";
+import { resolveBackendAssetUrl, speakWithDigitalHuman, type DigitalHumanResponse } from "@/api/digitalHuman";
+import AvatarStage from "@/components/digital-human/AvatarStage.vue";
+import DigitalHumanControlPanel from "@/components/digital-human/DigitalHumanControlPanel.vue";
+import SafetyNotice from "@/components/digital-human/SafetyNotice.vue";
+import SubtitlePanel from "@/components/digital-human/SubtitlePanel.vue";
 import type { ApiFriendlyError } from "@/api/tcmApi";
-import DoctorAvatar from "@/components/DoctorAvatar.vue";
-import SafetyNotice from "@/components/SafetyNotice.vue";
-import SubtitlePanel from "@/components/SubtitlePanel.vue";
+import type { AvatarStatus, DigitalHumanScene } from "@/types/digitalHuman";
 
 const props = defineProps<{
   apiBaseUrl: string;
@@ -18,37 +16,53 @@ const props = defineProps<{
 
 const SAFETY_NOTICE = "仅供健康科普参考，不替代医生诊疗。";
 
-const query = ref("乏力、气短、舌淡有齿痕");
+const text = ref("气虚质常见表现包括容易疲乏、气短、自汗等。建议规律作息，避免过度劳累。");
+const scene = ref<DigitalHumanScene>("knowledge_answer");
 const voice = ref("zh-CN-XiaoxiaoNeural");
+const modelUrl = ref("");
 const loading = ref(false);
 const speaking = ref(false);
+const thinking = ref(false);
+const status = ref<AvatarStatus>("idle");
 const currentTime = ref(0);
 const result = ref<DigitalHumanResponse | null>(null);
 const error = ref<ApiFriendlyError | null>(null);
 const playbackMessage = ref("");
 const audioRef = ref<HTMLAudioElement | null>(null);
 
-const broadcastText = computed(() => {
-  const text = result.value?.text || "";
-  if (!text) return "";
-  return text.includes(SAFETY_NOTICE) ? text : `${text} 安全提示：${SAFETY_NOTICE}`;
-});
-
-const closedAvatarUrl = computed(() =>
-  resolveBackendAssetUrl(result.value?.avatar?.closed || "/static/avatars/doctor_closed.svg", props.apiBaseUrl),
-);
-const openAvatarUrl = computed(() =>
-  resolveBackendAssetUrl(result.value?.avatar?.open || "/static/avatars/doctor_open.svg", props.apiBaseUrl),
-);
+const broadcastText = computed(() => result.value?.text || "");
 const audioUrl = computed(() => resolveBackendAssetUrl(result.value?.audio_url || "", props.apiBaseUrl));
 const ttsFailed = computed(() => result.value?.tts_status === "failed" || (!audioUrl.value && Boolean(result.value)));
 
-function stopSpeaking() {
-  speaking.value = false;
-}
+onMounted(() => {
+  const storedText = localStorage.getItem("digital_human_speak_text");
+  const storedScene = localStorage.getItem("digital_human_scene") as DigitalHumanScene | null;
+  const storedVoice = localStorage.getItem("digital_human_voice");
+  if (storedText) {
+    text.value = storedText;
+    if (storedScene && ["constitution_result", "knowledge_answer", "general_notice"].includes(storedScene)) {
+      scene.value = storedScene;
+    }
+    if (storedVoice) {
+      voice.value = storedVoice;
+    }
+    playbackMessage.value = "已从上一页面带入播报文本，可点击“开始播报”。";
+    localStorage.removeItem("digital_human_speak_text");
+    localStorage.removeItem("digital_human_scene");
+    localStorage.removeItem("digital_human_voice");
+  }
+});
 
 async function submit() {
+  const trimmedText = text.value.trim();
+  if (!trimmedText) {
+    ElMessage.warning("请先输入需要播报的文本。");
+    return;
+  }
+
   loading.value = true;
+  thinking.value = true;
+  status.value = "thinking";
   error.value = null;
   playbackMessage.value = "";
   result.value = null;
@@ -56,30 +70,86 @@ async function submit() {
   stopSpeaking();
 
   try {
-    result.value = await talkToDigitalHuman(query.value, voice.value, props.apiBaseUrl);
+    result.value = await speakWithDigitalHuman(scene.value, trimmedText, voice.value, props.apiBaseUrl);
+    thinking.value = false;
     await nextTick();
     if (audioUrl.value && audioRef.value) {
+      audioRef.value.currentTime = 0;
       try {
         await audioRef.value.play();
       } catch (playError) {
         playbackMessage.value = "浏览器未自动播放音频，可点击播放器手动播放。";
+        status.value = "finished";
         stopSpeaking();
       }
+    } else {
+      status.value = "finished";
+      playbackMessage.value = "当前没有可播放音频，已降级为文本和字幕展示。";
     }
   } catch (err) {
     error.value = err as ApiFriendlyError;
+    thinking.value = false;
+    status.value = "error";
   } finally {
     loading.value = false;
   }
+}
+
+async function replay() {
+  if (audioUrl.value && audioRef.value) {
+    audioRef.value.currentTime = 0;
+    await audioRef.value.play().catch(() => {
+      playbackMessage.value = "浏览器阻止自动播放，可点击播放器手动播放。";
+    });
+    return;
+  }
+  if (result.value?.text) {
+    playbackMessage.value = "当前结果没有音频，已保留文本和字幕展示。";
+  }
+}
+
+function stopPlayback() {
+  if (audioRef.value) {
+    audioRef.value.pause();
+  }
+  stopSpeaking();
+  status.value = result.value ? "finished" : "idle";
+}
+
+function stopSpeaking() {
+  speaking.value = false;
+}
+
+function handlePlay() {
+  speaking.value = true;
+  thinking.value = false;
+  status.value = "speaking";
+}
+
+function handlePause() {
+  if (!audioRef.value?.ended) {
+    stopSpeaking();
+  }
+}
+
+function handleEnded() {
+  currentTime.value = audioRef.value?.duration || currentTime.value;
+  stopSpeaking();
+  status.value = "finished";
 }
 
 function handleTimeUpdate() {
   currentTime.value = audioRef.value?.currentTime || 0;
 }
 
-function handleEnded() {
-  currentTime.value = audioRef.value?.duration || currentTime.value;
-  stopSpeaking();
+function clearForm() {
+  text.value = "";
+  result.value = null;
+  error.value = null;
+  playbackMessage.value = "";
+  currentTime.value = 0;
+  status.value = "idle";
+  stopPlayback();
 }
 </script>
 
@@ -87,95 +157,77 @@ function handleEnded() {
   <section class="tool-surface digital-human-view">
     <div class="view-heading">
       <div>
-        <h2>中医体质辨识数字人演示</h2>
-        <p>通过数字人头像、语音播报和字幕展示中医体质辨识结果。</p>
+        <h2>数字人播报</h2>
+        <p>通过 Web 3D 数字人、语音和字幕播报体质问卷结果与中医知识问答结果。</p>
       </div>
-      <el-tag size="large" effect="light">应用展示层</el-tag>
+      <el-tag size="large" effect="light">Vue3 + Three.js + Web Audio</el-tag>
     </div>
 
     <SafetyNotice />
 
-    <div class="digital-human-layout">
-      <section class="digital-human-input">
-        <h3>症状输入</h3>
-        <el-form label-position="top">
-          <el-form-item label="症状描述">
-            <el-input v-model="query" type="textarea" :rows="7" maxlength="500" show-word-limit />
-          </el-form-item>
-          <el-form-item label="播报音色">
-            <el-input v-model="voice" placeholder="zh-CN-XiaoxiaoNeural" />
-          </el-form-item>
-          <el-button type="primary" :icon="DataAnalysis" :loading="loading" @click="submit">
-            开始辨识并播报
-          </el-button>
-        </el-form>
-      </section>
+    <div class="digital-human-grid">
+      <AvatarStage
+        :audio-element="audioRef"
+        :speaking="speaking"
+        :thinking="thinking"
+        :status="status"
+        :tts-failed="ttsFailed"
+        :model-url="modelUrl"
+        @replay="replay"
+        @stop="stopPlayback"
+      />
 
-      <section class="digital-human-stage">
-        <DoctorAvatar
-          :speaking="speaking"
-          :closed-avatar-url="closedAvatarUrl"
-          :open-avatar-url="openAvatarUrl"
+      <div class="digital-human-side">
+        <DigitalHumanControlPanel
+          v-model:text="text"
+          v-model:scene="scene"
+          v-model:voice="voice"
+          v-model:model-url="modelUrl"
+          :loading="loading"
+          @submit="submit"
+          @clear="clearForm"
         />
-        <div class="digital-human-status">
-          <span>当前状态</span>
-          <strong>{{ speaking ? "播报中" : result ? "已生成" : "待输入" }}</strong>
-        </div>
-        <audio
-          v-if="audioUrl"
-          ref="audioRef"
-          class="digital-human-audio"
-          controls
-          :src="audioUrl"
-          @play="speaking = true"
-          @pause="stopSpeaking"
-          @ended="handleEnded"
-          @timeupdate="handleTimeUpdate"
-        />
-        <el-alert
-          v-if="ttsFailed"
-          class="digital-human-alert"
-          :title="result?.message || 'TTS 暂不可用，已降级为文本和字幕展示。'"
-          type="warning"
-          :closable="false"
-          show-icon
-        />
-        <el-alert
-          v-if="playbackMessage"
-          class="digital-human-alert"
-          :title="playbackMessage"
-          type="info"
-          :closable="false"
-          show-icon
-        />
-      </section>
 
-      <section class="digital-human-result">
-        <h3>体质辨识结果</h3>
-        <div v-if="result" class="digital-human-result__body">
-          <div class="summary-card accent">
-            <span>体质倾向</span>
-            <strong>{{ result.constitution }}</strong>
-          </div>
-          <div class="digital-human-broadcast">
-            <span>播报文本</span>
+        <section v-if="result || playbackMessage || error" class="digital-human-output">
+          <h3>播报结果</h3>
+          <el-alert v-if="error" :title="error.message" type="warning" :closable="false" show-icon>
+            <el-collapse class="error-detail">
+              <el-collapse-item title="技术详情" name="error">
+                <pre>{{ JSON.stringify(error, null, 2) }}</pre>
+              </el-collapse-item>
+            </el-collapse>
+          </el-alert>
+          <el-alert v-if="playbackMessage" :title="playbackMessage" type="info" :closable="false" show-icon />
+          <audio
+            v-if="audioUrl"
+            ref="audioRef"
+            class="digital-human-audio"
+            controls
+            :src="audioUrl"
+            crossorigin="anonymous"
+            @play="handlePlay"
+            @pause="handlePause"
+            @ended="handleEnded"
+            @timeupdate="handleTimeUpdate"
+          />
+          <el-alert
+            v-if="ttsFailed"
+            :title="result?.message || 'TTS 暂不可用，已降级为文本和字幕展示。'"
+            type="warning"
+            :closable="false"
+            show-icon
+          />
+          <div v-if="result" class="broadcast-text">
+            <span>最终播报文本</span>
             <p>{{ broadcastText }}</p>
           </div>
-        </div>
-        <el-empty v-else description="提交症状后展示体质倾向和播报文本" />
-      </section>
+        </section>
+      </div>
     </div>
   </section>
 
-  <el-alert v-if="error" class="page-alert" :title="error.message" type="warning" :closable="false" show-icon>
-    <el-collapse class="error-detail">
-      <el-collapse-item title="技术详情" name="error">
-        <pre>{{ JSON.stringify(error, null, 2) }}</pre>
-      </el-collapse-item>
-    </el-collapse>
-  </el-alert>
-
   <SubtitlePanel
+    class="digital-human-subtitles"
     :subtitles="result?.subtitles || []"
     :speaking="speaking"
     :current-time="currentTime"
@@ -190,51 +242,31 @@ function handleEnded() {
   overflow: hidden;
 }
 
-.digital-human-layout {
+.digital-human-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.95fr) minmax(240px, 0.8fr) minmax(300px, 1.05fr);
-  gap: 18px;
+  grid-template-columns: minmax(420px, 1.1fr) minmax(340px, 0.9fr);
+  gap: 20px;
+  align-items: start;
   margin-top: 18px;
 }
 
-.digital-human-input,
-.digital-human-stage,
-.digital-human-result {
+.digital-human-side {
+  display: grid;
+  gap: 16px;
   min-width: 0;
+}
+
+.digital-human-output {
+  display: grid;
+  gap: 12px;
   padding: 18px;
   background: #ffffff;
   border: 1px solid #dceaf3;
   border-radius: 8px;
 }
 
-.digital-human-input h3,
-.digital-human-result h3 {
-  margin: 0 0 14px;
-  color: #10466f;
-}
-
-.digital-human-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  background: #f7fbff;
-}
-
-.digital-human-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 12px;
-  color: #5c7282;
-  background: #ffffff;
-  border: 1px solid #dceaf3;
-  border-radius: 8px;
-}
-
-.digital-human-status strong {
+.digital-human-output h3 {
+  margin: 0;
   color: #10466f;
 }
 
@@ -242,37 +274,32 @@ function handleEnded() {
   width: 100%;
 }
 
-.digital-human-alert {
-  width: 100%;
-}
-
-.digital-human-result__body {
-  display: grid;
-  gap: 14px;
-}
-
-.digital-human-broadcast {
+.broadcast-text {
   padding: 14px;
+  color: #263b4a;
   background: #f7fbff;
   border: 1px solid #dceaf3;
   border-radius: 8px;
 }
 
-.digital-human-broadcast span {
+.broadcast-text span {
   display: block;
   margin-bottom: 8px;
   color: #10466f;
   font-weight: 700;
 }
 
-.digital-human-broadcast p {
+.broadcast-text p {
   margin: 0;
-  color: #263b4a;
   line-height: 1.85;
 }
 
+.digital-human-subtitles {
+  margin-top: 16px;
+}
+
 @media (max-width: 1120px) {
-  .digital-human-layout {
+  .digital-human-grid {
     grid-template-columns: 1fr;
   }
 }

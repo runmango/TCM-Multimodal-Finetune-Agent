@@ -4,25 +4,29 @@ import { useRoute } from "vue-router";
 import { DataAnalysis, DocumentChecked, FirstAidKit, InfoFilled, Search, Service } from "@element-plus/icons-vue";
 
 import { DEFAULT_API_BASE_URL } from "@/api/tcmApi";
+import AdminAnalyticsView from "@/views/AdminAnalyticsView.vue";
 import DisclaimerBar from "@/components/DisclaimerBar.vue";
 import StatusPanel from "@/components/StatusPanel.vue";
 
 const route = useRoute();
 const apiBaseUrl = ref(DEFAULT_API_BASE_URL);
+const isAdminMode = import.meta.env.VITE_ADMIN_MODE === "true";
 
 const activeRoute = computed(() => route.path);
 
 const menuItems = [
-  { path: "/constitution", title: "体质辨识", icon: FirstAidKit },
-  { path: "/rag-search", title: "知识库检索", icon: Search },
-  { path: "/dataset-build", title: "知识库构建", icon: DocumentChecked },
-  { path: "/digital-human", title: "数字人演示", icon: Service },
-  { path: "/about", title: "系统说明", icon: InfoFilled },
+  { path: "/", title: "首页", icon: InfoFilled },
+  { path: "/constitution-questionnaire", title: "体质辨识问卷", icon: FirstAidKit },
+  { path: "/knowledge-ask", title: "中医知识问答", icon: Search },
+  { path: "/digital-human", title: "数字人播报", icon: Service },
+  { path: "/dataset-build", title: "数据集与微调", icon: DocumentChecked },
+  { path: "/eval-report", title: "评估报告", icon: DataAnalysis },
 ];
 </script>
 
 <template>
-  <div class="app-shell">
+  <AdminAnalyticsView v-if="isAdminMode" />
+  <div v-else class="app-shell">
     <aside class="sidebar">
       <div class="brand">
         <div class="brand__mark">
@@ -30,7 +34,7 @@ const menuItems = [
         </div>
         <div>
           <div class="brand__name">中医演示系统</div>
-          <div class="brand__sub">RAG · 体质辨识 · 数据治理</div>
+          <div class="brand__sub">知识问答 · 问卷辨识 · 数据治理</div>
         </div>
       </div>
 
@@ -52,9 +56,8 @@ const menuItems = [
       <header class="app-header">
         <div>
           <h1>中医知识库与体质辨识演示系统</h1>
-          <p>基于 RAG 的中医知识检索与体质倾向分析 Demo</p>
+          <p>基于知识库问答、问卷量表和数字人播报的工程 Demo</p>
         </div>
-        <el-tag size="large" effect="dark">Vue3 + FastAPI</el-tag>
       </header>
 
       <el-alert
