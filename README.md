@@ -449,4 +449,8 @@ data/reports/tcm_sft_prepare_report.json
 
 ## License
 
-License information will be added later.
+The source code of this project is licensed under the Apache License 2.0.
+
+Third-party datasets, model weights, medical resources, and external assets used in this project are not included in this repository by default. They are subject to their original licenses and terms of use.
+
+This project is for technical demonstration and research purposes only. It does not provide medical diagnosis, treatment, prescription, or medication advice.
